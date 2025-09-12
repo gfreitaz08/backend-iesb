@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "name": "calculadora-express",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {
+    "jest": "^30.1.3",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
+  },
+  "scripts": {
+  "start": "nodemon index.js",
+  "test": "jest"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
