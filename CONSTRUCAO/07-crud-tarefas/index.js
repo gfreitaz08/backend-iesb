@@ -2,25 +2,76 @@ const express = require('express')
 const mongoose = require('mongoose')
 const dotenv = require('dotenv').config()
 
+const app = express()
+
+app.use(express.json())
+
+// Connetar no banco Mongo
 const DB_HOST = process.env.DB_HOST
 const DB_USER = process.env.DB_USER
 const DB_PASS = process.env.DB_PASS
 const DB_NAME = process.env.DB_NAME
 
-const app = express()
+const url = `mongodb+srv://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`
 
-app.use(express.json())
+mongoose.connect(url)
+  .then(() => {
+    console.log("Conectado ao MongoDB")
+  })
+  .catch(err => {
+    console.log("Erro ao conectar no banco MongoDB: ", err)
+  })
 
-// connetar no bamco mongo
+// Interface com o banco de dados - Model
+// Cada model(Modelo) representa uma Collection(Tabela)
+const TarefaModel = mongoose.model('Tarefas', new mongoose.Schema(
+  {
+    nome: String
+  }
+))
 
-mongoose.connect(`mongodb+srv://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`)
-    .then(() => {
-    console.log("conectado ao MongoDB")
-    })
-    .catch(err => {
-        console.log("Erro ao conectar no banco MongoDB:  ", err)
+// CRUD
 
-    })
-    app.listen(3000, () =>{
-    console.log("Aplicação rodando em  https://localhost:3000")
+// Create
+app.post('/tarefas', async (req, res, next) => {
+  const tarefa = req.body
+  if (!tarefa.nome) {
+    return res.status(400).json({ erro: "O campo nome é obrigatório!!!" })
+  }
+  const tarefaCriada = await TarefaModel.create(tarefa)
+  res.status(201).json(tarefaCriada)
+})
+
+// READ
+app.get('/tarefas', async (req, res, next) => {
+  const tarefas = await TarefaModel.find()
+  res.json(tarefas)
+})
+
+// UPDATE
+app.put('/tarefas/:id', async (req, res, next) => {
+  const id = req.params.id
+  const tarefa = req.body
+  if (!tarefa.nome) {
+    return res.status(400).json({ erro: "O campo nome é obrigatório!!!" })
+  }
+
+  const tarefaAtualizada = await TarefaModel.findByIdAndUpdate(id, tarefa, { new: true })
+
+  if (!tarefaAtualizada) {
+    return res.status(404).json({ erro: "Tarefa não encontrada!!!" })
+  }
+  res.json(tarefaAtualizada)
+})
+
+// DELETE
+app.delete('/tarefas/:id', async (req, res, next) => {
+  const id = req.params.id
+  await TarefaModel.findByIdAndDelete(id)
+  res.json({ mensagem: "Tarefa excluida!!!" })
+})
+
+// start
+app.listen(3000, () => {
+  console.log("Aplicação rodando em http://localhost:3000")
 })
